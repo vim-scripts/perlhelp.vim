@@ -1,0 +1,33 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=1913
+
+A plugin that provides quick and easy access to perldoc. The perldoc text is displayed in a new window. This window is reused for resulting lookups if left open. When looking up a module filetype is set to perl so it is correctly highlighted, if syntax highlighting is turned on.
+
+Functions:
+The functions can accept an argument for the topic to lookup. If no argument is supplied they will prompt for the topic.
+PerlFAQ - Lookup a regular expression using perldoc -q.
+PerlHelp - Lookup a topic using perldoc.
+PerlFunc - Lookup a function using perldoc -f.
+PerlMod - Lookup a module using perldoc -m.
+PerlVar - Lookup a Perl builtin variable in the perlvar page.
+
+Key Mappings:
+<Leader>ph - Lookup the selected text in visual mode or the word under the cursor in normal mode using perldoc.
+<Leader>PH - Prompt for a topic to lookup using perldoc.
+<Leader>pf - Lookup the selected text in visual mode or the word under the cursor in normal mode using perldoc -f.
+<Leader>PF - Prompt for a function to lookup using perldoc -f.
+<Leader>pm - Lookup the selected text in visual mode or the word under the cursor in normal mode using perldoc -m.
+<Leader>PM - Prompt for a module to display using perldoc -m.
+<Leader>pq - Lookup the selected text in visual mode or the word under the cursor in normal mode using perldoc -q.
+<Leader>PQ - Prompt for a regular expression to lookup using perldoc -q.
+<Leader>pv - Lookup the selected text in visual mode or the word under the cursor in normal mode in the perlvar page.
+<Leader>PV - Prompt for a Perl builtin variable and look it up in the perlvar page.
+
+The <Leader> key is normally '\&#039. Thus to lookup the word under the cursor type '\ph'.
+
+Tip:
+Adding the following to your vimrc file will make POD documentation in Perl modules easier to read:
+let perl_include_pod=1
+
+If you find any problems or have any suggestions please feel free to email me at LoranceStinson+perlhelp AT gmail DOT com.
+
+Also available at http://lorance.freeshell.org/perlhelp/
