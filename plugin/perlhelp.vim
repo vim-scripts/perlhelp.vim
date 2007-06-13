@@ -1,11 +1,16 @@
 " vim600: set foldmethod=marker:
 " =============================================================================
 " File:         perlhelp.vim (global plugin)
-" Last Changed: 2007-06-03
+" Last Changed: 2007-06-13
 " Maintainer:   Lorance Stinson <LoranceStinson+perlhelp@gmail.com>
-" Version:      1.0
+" Version:      1.1
 " License:      Vim License
 " =============================================================================
+
+" Changes {{{1
+
+" 1.1 2007-06-13
+"   Added 'setlocal iskeyword+=:' to account for :'s in module names.
 
 " Initialization. {{{1
 " Allow user to avoid loading this plugin and prevent loading twice.
@@ -14,6 +19,9 @@ if exists ('loaded_perlhelp')
 endif
 
 let loaded_perlhelp = 1
+
+" Make sure the : in modules is accounted for.
+setlocal iskeyword+=:
 
 " Make sure perlhelp is available and executable
 if exists('perlhelp_prog')
