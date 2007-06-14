@@ -1,13 +1,17 @@
 " vim600: set foldmethod=marker:
 " =============================================================================
 " File:         perlhelp.vim (global plugin)
-" Last Changed: 2007-06-13
+" Last Changed: 2007-06-14
 " Maintainer:   Lorance Stinson <LoranceStinson+perlhelp@gmail.com>
-" Version:      1.1
+" Version:      1.2
 " License:      Vim License
 " =============================================================================
 
 " Changes {{{1
+
+" 1.2 2007-06-14
+"   Removed 'setlocal iskeyword+=:' and used <cWORD> and a substitution
+"   as suggested by Erik Falor.
 
 " 1.1 2007-06-13
 "   Added 'setlocal iskeyword+=:' to account for :'s in module names.
@@ -19,9 +23,6 @@ if exists ('loaded_perlhelp')
 endif
 
 let loaded_perlhelp = 1
-
-" Make sure the : in modules is accounted for.
-setlocal iskeyword+=:
 
 " Make sure perlhelp is available and executable
 if exists('perlhelp_prog')
@@ -79,72 +80,72 @@ if !hasmapto('<Plug>PerlHelpFAQAsk')
     nmap <silent> <unique> <Leader>PQ <Plug>PerlHelpFAQAsk
 endif
 
-" Plug mappings for the key mapings. {{{2
-nmap <silent> <unique> <script> <Plug>PerlHelpNormal      :call <SID>PerlHelp(expand("<cword>"))<CR>
+" Plug mappings for the key mappings. {{{2
+nmap <silent> <unique> <script> <Plug>PerlHelpNormal      :call <SID>PerlHelp(expand("<cWORD>"))<CR>
 vmap <silent> <unique> <script> <Plug>PerlHelpVisual     y:call <SID>PerlHelp('<c-r>"')<CR>
 nmap <silent> <unique> <script> <Plug>PerlHelpAsk         :call <SID>PerlHelp(<SID>PerlHelpAsk("topic"))<CR>
-nmap <silent> <unique> <script> <Plug>PerlHelpFuncNormal  :call <SID>PerlHelpFunc(expand("<cword>"))<CR>
+nmap <silent> <unique> <script> <Plug>PerlHelpFuncNormal  :call <SID>PerlHelpFunc(expand("<cWORD>"))<CR>
 vmap <silent> <unique> <script> <Plug>PerlHelpFuncVisual y:call <SID>PerlHelpFunc('<c-r>"')<CR>
 nmap <silent> <unique> <script> <Plug>PerlHelpFuncAsk     :call <SID>PerlHelpFunc(<SID>PerlHelpAsk("function"))<CR>
-nmap <silent> <unique> <script> <Plug>PerlHelpModNormal   :call <SID>PerlHelpMod(expand("<cword>"))<CR>
+nmap <silent> <unique> <script> <Plug>PerlHelpModNormal   :call <SID>PerlHelpMod(expand("<cWORD>"))<CR>
 vmap <silent> <unique> <script> <Plug>PerlHelpModVisual  y:call <SID>PerlHelpMod('<c-r>"')<CR>
 nmap <silent> <unique> <script> <Plug>PerlHelpModAsk      :call <SID>PerlHelpMod(<SID>PerlHelpAsk("module"))<CR>
-nmap <silent> <unique> <script> <Plug>PerlHelpFAQNormal   :call <SID>PerlHelpFAQ(expand("<cword>"))<CR>
+nmap <silent> <unique> <script> <Plug>PerlHelpFAQNormal   :call <SID>PerlHelpFAQ(expand("<cWORD>"))<CR>
 vmap <silent> <unique> <script> <Plug>PerlHelpFAQVisual  y:call <SID>PerlHelpFAQ('<c-r>"')<CR>
 nmap <silent> <unique> <script> <Plug>PerlHelpFAQAsk      :call <SID>PerlHelpFAQ(<SID>PerlHelpAsk("module"))<CR>
 
 " Functions. {{{1
 " Ask for text to lookup. {{{2
 function <SID>PerlHelpAsk(prompt)
-    let s:string = input('Enter the ' . a:prompt . ' to lookup: ')
-    return s:string
+    let l:string = input('Enter the ' . a:prompt . ' to lookup: ')
+    return l:string
 endfunction
 
 " Display help on a perl FAQ entry. {{{2
 function <SID>PerlHelpFAQ(...)
     if a:0 == 0
-        let s:re = <SID>PerlHelpAsk('FAQ regular expression')
+        let l:re = <SID>PerlHelpAsk('FAQ regular expression')
     else
-        let s:re = a:1
+        let l:re = substitute(a:1, ';', '', '')
     endif
-    let l:text = system(s:perlhelp . " -t -q " . s:re)
+    let l:text = system(s:perlhelp . " -t -q " . l:re)
     call <SID>PerlHelpWindow(l:text, 0)
 endfunction
 
 " Display help on a perl function. {{{2
 function <SID>PerlHelpFunc(...)
     if a:0 == 0
-        let s:function = <SID>PerlHelpAsk('function')
+        let l:function = <SID>PerlHelpAsk('function')
     else
-        let s:function = a:1
+        let l:function = substitute(a:1, ';', '', '')
     endif
-    let l:text = system(s:perlhelp . " -t -f " . s:function)
+    let l:text = system(s:perlhelp . " -t -f " . l:function)
     call <SID>PerlHelpWindow(l:text, 0)
 endfunction
 
 " Just call perldoc with the argument. {{{2
 function <SID>PerlHelp(...)
     if a:0 == 0
-        let s:topic = <SID>PerlHelpAsk('topic')
+        let l:topic = <SID>PerlHelpAsk('topic')
     else
-        let s:topic = a:1
+        let l:topic = substitute(a:1, ';', '', '')
     endif
-    let s:text = system(s:perlhelp . " -t " . s:topic)
-    call <SID>PerlHelpWindow(s:text, 0)
+    let l:text = system(s:perlhelp . " -t " . l:topic)
+    call <SID>PerlHelpWindow(l:text, 0)
 endfunction
 
 " Display a perl module. {{{2
 function <SID>PerlHelpMod(...)
     if a:0 == 0
-        let s:module = <SID>PerlHelpAsk('module')
+        let l:module = <SID>PerlHelpAsk('module')
     else
-        let s:module = a:1
+        let l:module = substitute(a:1, ';', '', '')
     endif
-    let s:text = system(s:perlhelp . " -m " . s:module)
-    call <SID>PerlHelpWindow(s:text, 1)
+    let l:text = system(s:perlhelp . " -m " . l:module)
+    call <SID>PerlHelpWindow(l:text, 1)
 endfunction
 
-" Displa the actual text. {{{2
+" Display the actual text. {{{2
 " Split the window or use the existing split to display the text.
 " Taken from asciitable.vim by Jeffrey Harkavy.
 function <SID>PerlHelpWindow(command, syntax)
@@ -173,6 +174,7 @@ function <SID>PerlHelpWindow(command, syntax)
         setlocal nowrap
         setlocal norightleft
         setlocal foldcolumn=0
+        setlocal nofoldenable
         setlocal modifiable
         let b:PerlHelp='PerlHelp'
     endif

@@ -1,8 +1,8 @@
 *perlhelp.txt* perldoc interface
 
-last changed:   2007-06-13
+last changed:   2007-06-14
 maintainer:     lorance stinson <lorancestinson+perlhelp@gmail.com>
-version:        1.1
+version:        1.2
 license:        vim license
 
 ==============================================================================
