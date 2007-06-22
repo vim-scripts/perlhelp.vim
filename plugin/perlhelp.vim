@@ -1,13 +1,18 @@
 " vim600: set foldmethod=marker:
 " =============================================================================
 " File:         perlhelp.vim (global plugin)
-" Last Changed: 2007-06-15
+" Last Changed: 2007-06-22
 " Maintainer:   Lorance Stinson <LoranceStinson+perlhelp@gmail.com>
-" Version:      1.3
+" Version:      1.4
 " License:      Vim License
 " =============================================================================
 
 " Changes {{{1
+
+" 1.4 2007-06-22
+" When lookup up a function strip everything up to, and including, '->'.
+" This will make methods be looked up instead of the object the method is
+" called from.
 
 " 1.3 2007-06-15
 " Set the file type to man if viewing general perldoc output.
@@ -25,7 +30,7 @@
 
 " Initialization. {{{1
 " Allow user to avoid loading this plugin and prevent loading twice.
-if exists ('loaded_perlhelp')
+if exists('loaded_perlhelp')
     finish
 endif
 
@@ -124,10 +129,14 @@ function <SID>PerlHelpFunc(...)
     if a:0 == 0
         let l:topic = <SID>PerlHelpAsk('function')
     else
+        " Try to eliminate the package or variable if it's a method.
+        let l:topic = substitute(a:1, '^.*->', '', 'g')
         " Remove any non alpha numeric characters with an optional leading hyphen.
-        let l:topic = substitute(a:1, '^[^[:alnum:]\-]*\(-\=[[:alnum:]]*\).*', '\1', 'g')
+        let l:topic = substitute(l:topic, '^[^[:alnum:]\-]*\(-\=[[:alnum:]]*\).*', '\1', 'g')
     endif
     let l:text = system(s:perlhelp . " -f " . l:topic)
+
+    " Display the text.
     call <SID>PerlHelpWindow(l:text, 'text')
 endfunction
 
@@ -138,7 +147,9 @@ function <SID>PerlHelp(question, option, ...)
     if a:0 == 0
         let l:topic = <SID>PerlHelpAsk(a:question)
     else
+        " Only grab soemthing that could be a topic or module.
         let l:topic = substitute(a:1, '^[^[:alnum:]_:]*\([[:alnum:]_:]*\).*', '\1', 'g')
+        " Eliminate trailing -'s.
         let l:topic = substitute(l:topic, '-*$', '', '')
     endif
 
@@ -162,8 +173,7 @@ function <SID>PerlHelp(question, option, ...)
         endif
     endwhile
 
-    " Only turn on syntax highlighting when looking up the source for a module
-    " and one was found.
+    " Setup the syntax highlighting method used.
     if a:option == '-m'
         if l:text =~ '^No [[:alpha:]]* found for'
             let l:type = 'text'
