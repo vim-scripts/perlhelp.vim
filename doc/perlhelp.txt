@@ -2,7 +2,7 @@
 
 last changed:   2007-06-22
 maintainer:     Lorance Stinson <LoranceStinson+perlhelp@gmail.com>
-version:        1.4
+version:        1.5
 license:        vim license
 
 ==============================================================================
@@ -63,6 +63,11 @@ prompts for one.
 
 Looks up a topic using perldoc.  If no topic is specified prompts for one.
 
+:PerlVar                                                *:PerlVar*
+
+Loads the perlvar man page and searches for the specified variable.  If no
+variable is provided prompts for one.
+
 2.1 Mappings                                            *perlhelp-mappings*
 
 Mappings come in two forms, lower case and upper case.  Lower case uses the
@@ -81,6 +86,9 @@ nmap <silent> <unique> <Leader>PM <Plug>PerlHelpModAsk
 nmap <silent> <unique> <Leader>pq <Plug>PerlHelpFAQNormal
 vmap <silent> <unique> <Leader>pq <Plug>PerlHelpFAQVisual
 nmap <silent> <unique> <Leader>PQ <Plug>PerlHelpFAQAsk
+nmap <silent> <unique> <Leader>pv <Plug>PerlHelpVarNormal
+vmap <silent> <unique> <Leader>pv <Plug>PerlHelpVarVisual
+nmap <silent> <unique> <Leader>PV <Plug>PerlHelpVarAsk
 
 ==============================================================================
 3. Bugs                                                 *perlhelp-bugs*

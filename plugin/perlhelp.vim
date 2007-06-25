@@ -3,11 +3,15 @@
 " File:         perlhelp.vim (global plugin)
 " Last Changed: 2007-06-22
 " Maintainer:   Lorance Stinson <LoranceStinson+perlhelp@gmail.com>
-" Version:      1.4
+" Version:      1.5
 " License:      Vim License
 " =============================================================================
 
 " Changes {{{1
+
+" 1.5 2007-06-22
+" Added variable lookup.
+" Load man pages to the respective topics when no topic is specified.
 
 " 1.4 2007-06-22
 " When lookup up a function strip everything up to, and including, '->'.
@@ -53,6 +57,7 @@ let s:perlhelp = s:perlhelp . ' -T -t '
 :command! -nargs=? PerlFunc call <SID>PerlHelpFunc(<f-args>)
 :command! -nargs=? PerlHelp call <SID>PerlHelp('topic', '', <f-args>)
 :command! -nargs=? PerlMod  call <SID>PerlHelp('module', '-m', <f-args>)
+:command! -nargs=? PerlVar  call <SID>PerlHelpVar(<f-args>)
 
 " Key mappings. {{{2
 if !hasmapto('<Plug>PerlHelpNormal')
@@ -91,6 +96,15 @@ endif
 if !hasmapto('<Plug>PerlHelpFAQAsk')
     nmap <silent> <unique> <Leader>PQ <Plug>PerlHelpFAQAsk
 endif
+if !hasmapto('<Plug>PerlHelpVarNormal')
+    nmap <silent> <unique> <Leader>pv <Plug>PerlHelpVarNormal
+endif
+if !hasmapto('<Plug>PerlHelpVarVisual')
+    vmap <silent> <unique> <Leader>pv <Plug>PerlHelpVarVisual
+endif
+if !hasmapto('<Plug>PerlHelpVarAsk')
+    nmap <silent> <unique> <Leader>PV <Plug>PerlHelpVarAsk
+endif
 
 " Plug mappings for the key mappings. {{{2
 nmap <silent> <unique> <script> <Plug>PerlHelpNormal      :call <SID>PerlHelp('topic', '', expand("<cWORD>"))<CR>
@@ -105,6 +119,9 @@ nmap <silent> <unique> <script> <Plug>PerlHelpModAsk      :call <SID>PerlHelp('m
 nmap <silent> <unique> <script> <Plug>PerlHelpFAQNormal   :call <SID>PerlHelpFAQ(expand("<cword>"))<CR>
 vmap <silent> <unique> <script> <Plug>PerlHelpFAQVisual  y:call <SID>PerlHelpFAQ('<c-r>"')<CR>
 nmap <silent> <unique> <script> <Plug>PerlHelpFAQAsk      :call <SID>PerlHelpFAQ()<CR>
+nmap <silent> <unique> <script> <Plug>PerlHelpVarNormal   :call <SID>PerlHelpVar(expand("<cWORD>"))<CR>
+vmap <silent> <unique> <script> <Plug>PerlHelpVarVisual  y:call <SID>PerlHelpVar('<c-r>"')<CR>
+nmap <silent> <unique> <script> <Plug>PerlHelpVarAsk      :call <SID>PerlHelpVar()<CR>
 
 " Functions. {{{1
 " Ask for text to lookup. {{{2
@@ -120,8 +137,45 @@ function <SID>PerlHelpFAQ(...)
     else
         let l:topic = a:1
     endif
-    let l:text = system(s:perlhelp . " -q " . l:topic)
-    call <SID>PerlHelpWindow(l:text, 'text')
+
+    " Get the text and set the syntax type.
+    if l:topic != ''
+        let l:topic = escape(l:topic, '"\')
+        let l:text = system(s:perlhelp . ' -q "' . l:topic . '"')
+        let l:type = 'text'
+    else
+        let l:text = system(s:perlhelp . " perlfaq")
+        let l:type = 'man'
+    endif
+
+    " Display the text.
+    call <SID>PerlHelpWindow(l:text, l:type)
+endfunction
+
+" Display help on a perl variable. {{{2
+function <SID>PerlHelpVar(...)
+    if a:0 == 0
+        let l:topic = <SID>PerlHelpAsk('variable')
+    else
+        " Try to capture a variable.
+        " This can be tricky since variables use some strange punctuation.
+        " The following formats are tried in order.
+        " $, % or @ followed by alpha numeric characters and _.
+        " $, % or @ followed by ^ then a single alpha numeric character.
+        " $, % or @ followed by a single character.
+        " This should catch all special perl variables.
+        let l:topic = substitute(a:1, '^[^$%@]*\([$%@]\([[:alnum:]_]\+\|^[[:alnum:]]\|.\)\).*', '\1', '')
+    endif
+
+    " Display the perlvar page.
+    let l:text = system(s:perlhelp . " perlvar")
+    call <SID>PerlHelpWindow(l:text, 'man')
+
+    " Find the variable they want to lookup.
+    if l:topic != ''
+        let l:topic = escape(l:topic, '\')
+        execute "/^  \\+\\M" . l:topic . "/"
+    endif
 endfunction
 
 " Display help on a perl function. {{{2
@@ -134,10 +188,18 @@ function <SID>PerlHelpFunc(...)
         " Remove any non alpha numeric characters with an optional leading hyphen.
         let l:topic = substitute(l:topic, '^[^[:alnum:]\-]*\(-\=[[:alnum:]]*\).*', '\1', 'g')
     endif
-    let l:text = system(s:perlhelp . " -f " . l:topic)
+
+    " Get the text and set the syntax type.
+    if l:topic != ''
+        let l:text = system(s:perlhelp . " -f " . l:topic)
+        let l:type = 'text'
+    else
+        let l:text = system(s:perlhelp . " perlfunc")
+        let l:type = 'man'
+    endif
 
     " Display the text.
-    call <SID>PerlHelpWindow(l:text, 'text')
+    call <SID>PerlHelpWindow(l:text, l:type)
 endfunction
 
 " Lookup a module or general topic.
@@ -154,24 +216,28 @@ function <SID>PerlHelp(question, option, ...)
     endif
 
     " Try to lookup the topic.
-    while 1
-        let l:text = system(s:perlhelp . a:option . ' ' . l:topic)
-        if l:text =~ '^No [[:alpha:]]* found for'
-            " The module was not found.
-            " Try stripping off the last bit.
-            if l:topic =~ '::'
-                " Strip off the last bit of the module.
-                " eg. Getopt::Std::STANDARD_HELP_VERSION becomes Getopt::Std
-                let l:topic = substitute(l:topic, '::[^:]*$', '', '')
+    if l:topic != ''
+        while 1
+            let l:text = system(s:perlhelp . a:option . ' ' . l:topic)
+            if l:text =~ '^No [[:alpha:]]* found for'
+                " The module was not found.
+                " Try stripping off the last bit.
+                if l:topic =~ '::'
+                    " Strip off the last bit of the module.
+                    " eg. Getopt::Std::STANDARD_HELP_VERSION becomes Getopt::Std
+                    let l:topic = substitute(l:topic, '::[^:]*$', '', '')
+                else
+                   " No more to strip off, give up.
+                   break
+                endif
             else
-               " No more to strip off, give up.
-               break
+                " Found the module.
+                break
             endif
-        else
-            " Found the module.
-            break
-        endif
-    endwhile
+        endwhile
+    else
+        let l:text = system(s:perlhelp . " perl")
+    endif
 
     " Setup the syntax highlighting method used.
     if a:option == '-m'
